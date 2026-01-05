@@ -1,23 +1,25 @@
 #!name=微信公众号去广告
-#!desc=移除文章内的广告请求
+#!desc=移除文章内的广告请求（基于抓包补强）
 #!author=me
+#!date=2026-01-05
 
-[Rewrite]
+[URL Rewrite]
+# 公众号文章内广告数据（常见；很多去广告规则都靠它）
+^https?:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad(\?.*)?$ reject-dict
+
 # 公众号广告组件上报（抓包里 request_body_raw 含 report_id=ad_widget_100009）
 ^https?:\/\/mp\.weixin\.qq\.com\/tp\/datareport\/report$ reject-200
 
-# 广告视频素材（抓包里路径包含 /reserved/ads_svp_video__*.mp4 且 query 带 posid=）
+# 公众号文章广告素材（更通用）：wxs.qq.com 资源一旦带 posid=（广告位 id），基本可判定为广告
+# 来自 8_1767596780748.zip / 10_1767599305628.zip：wximg/wxsmw 均出现 posid= 且对应 reserved/ads_svp_video__ 素材
+^https?:\/\/wxsmw\.wxs\.qq\.com\/.*\?.*posid=\d+.* reject-200
+^https?:\/\/wximg\.wxs\.qq\.com\/.*\?.*posid=\d+.* reject-img
+
+# 广告视频素材（更精确的子集规则，保留在这里方便你对照）
 ^https?:\/\/wxsmw\.wxs\.qq\.com\/\d+\/\d+\/snssvpdownload\/.*\/reserved\/ads_svp_video__.*\.mp4(\?.*)?$ reject-200
 
-# 广告图片素材（抓包里路径包含 /reserved/ads_svp_video__*.jpeg；也兼容 png/webp）
-^https?:\/\/wximg\.wxs\.qq\.com\/\d+\/\d+\/snssvpdownload\/.*\/reserved\/ads_svp_video__.*\.(?:jpe?g|png|webp)(\?.*)?$ reject-img
-
-# 可选：抓包里出现过 wximg.wxs.qq.com 的 /snscosdownload/.../reserved/<hash> 且 query 带 posid=（疑似广告素材）
-# 如果你确认这是广告素材，可以取消注释启用；否则不建议开，避免误伤非广告资源。
-# ^https?:\/\/wximg\.wxs\.qq\.com\/\d+\/\d+\/snscosdownload\/.*\/reserved\/[^?]+\?.*posid= reject-img
-
-# 常见公众号广告接口（本次抓包里未直接出现，但很多号会走这个接口；按需启用）
-^https?:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad(\?.*)?$ reject-dict
+# 广告图片素材（更精确的子集规则；用 () 避免部分引擎不支持 (?:)）
+^https?:\/\/wximg\.wxs\.qq\.com\/\d+\/\d+\/snssvpdownload\/.*\/reserved\/ads_svp_video__.*\.(jpe?g|png|webp)(\?.*)?$ reject-img
 
 [MITM]
 hostname = mp.weixin.qq.com, wxsmw.wxs.qq.com, wximg.wxs.qq.com
