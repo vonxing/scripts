@@ -1,9 +1,24 @@
 #!name=微信公众号去广告
 #!desc=移除文章内的广告请求
-#!author=User
+#!author=me
 
 [Rewrite]
-^https:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad reject
+^https:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad  - reject-200
+# 公众号广告组件上报（抓包里 request_body_raw 含 report_id=ad_widget_100009）
+^https:\/\/mp\.weixin\.qq\.com\/tp\/datareport\/report$  - reject-200
+
+# 广告视频素材（抓包里路径包含 /reserved/ads_svp_video__*.mp4 且 query 带 posid=）
+^https:\/\/wxsmw\.wxs\.qq\.com\/\d+\/\d+\/snssvpdownload\/.*\/reserved\/ads_svp_video__.*\.mp4(\?.*)?$  - reject-200
+
+# 广告图片素材（抓包里路径包含 /reserved/ads_svp_video__*.jpeg）
+^https:\/\/wximg\.wxs\.qq\.com\/\d+\/\d+\/snssvpdownload\/.*\/reserved\/ads_svp_video__.*\.(?:jpe?g|png|webp)(\?.*)?$  - reject-200
+
+# 可选：抓包里出现过 wximg.wxs.qq.com 的 /snscosdownload/.../reserved/<hash> 且 query 带 posid=（疑似广告素材）
+# 如果你确认这是广告素材，可以取消注释启用；否则不建议开，避免误伤非广告资源。
+# ^https:\/\/wximg\.wxs\.qq\.com\/\d+\/\d+\/snscosdownload\/.*\/reserved\/[^?]+\?.*posid=  - reject-200
+
+# 常见公众号广告接口（本次抓包里未直接出现，但很多号会走这个接口；按需启用）
+# ^https:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad(\?.*)?$  - reject-200
 
 [MitM]
-hostname = mp.weixin.qq.com
+hostname = mp.weixin.qq.com, wxsmw.wxs.qq.com, wximg.wxs.qq.com
