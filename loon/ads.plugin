@@ -1,0 +1,9 @@
+#!name=微信公众号去广告
+#!desc=移除文章内的广告请求
+#!author=User
+
+[Rewrite]
+^https:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad reject
+
+[MitM]
+hostname = mp.weixin.qq.com
